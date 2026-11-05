@@ -37,6 +37,7 @@ final class PreferencesViewModel: ObservableObject {
     @Published var selectedCCFRank: String = ""
     @Published var trackedItems: [TrackedCountdownItem] = []
     @Published var calendarFeedbackMessage: String = ""
+    @Published var pendingDeleteItemId: UUID? = nil
 
     func loadFromDefaults(defaultName: String, defaultDate: Date) {
         let defaults = UserDefaults.standard
@@ -553,13 +554,27 @@ struct PreferencesContentView: View {
                                     .controlSize(.mini)
                                     .help("Add this deadline to Calendar")
 
-                                    Button {
-                                        viewModel.removeTracked(item)
-                                    } label: {
-                                        Image(systemName: "xmark.circle.fill")
-                                            .foregroundStyle(.secondary)
+                                    if viewModel.pendingDeleteItemId == item.id {
+                                        Button(role: .destructive) {
+                                            viewModel.removeTracked(item)
+                                            viewModel.pendingDeleteItemId = nil
+                                        } label: {
+                                            Text("Confirm Delete?")
+                                                .font(.system(size: 10.5, weight: .semibold))
+                                                .foregroundStyle(Color(nsColor: .systemRed))
+                                        }
+                                        .buttonStyle(.bordered)
+                                        .controlSize(.mini)
+                                    } else {
+                                        Button {
+                                            viewModel.pendingDeleteItemId = item.id
+                                        } label: {
+                                            Image(systemName: "xmark.circle.fill")
+                                                .foregroundStyle(.secondary)
+                                        }
+                                        .buttonStyle(.plain)
+                                        .help("Click twice to remove")
                                     }
-                                    .buttonStyle(.plain)
                                 }
                                 .padding(.horizontal, 10)
                                 .padding(.vertical, 5)

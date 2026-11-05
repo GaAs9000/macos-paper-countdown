@@ -73,27 +73,63 @@ for (px, name) in sizes {
     NSGraphicsContext.saveGraphicsState()
     NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
 
-    let rect = NSRect(x: 0, y: 0, width: CGFloat(px), height: CGFloat(px))
-    let inset = CGFloat(px) * 0.08
+    let s = CGFloat(px)
+    let rect = NSRect(x: 0, y: 0, width: s, height: s)
+    let inset = s * 0.085
     let cardRect = rect.insetBy(dx: inset, dy: inset)
     let radius = cardRect.width * 0.225
 
-    let path = NSBezierPath(roundedRect: cardRect, xRadius: radius, yRadius: radius)
-    let gradient = NSGradient(colors: [
-        NSColor(calibratedRed: 0.16, green: 0.48, blue: 0.98, alpha: 1.0),
-        NSColor(calibratedRed: 0.36, green: 0.24, blue: 0.92, alpha: 1.0)
-    ])!
-    gradient.draw(in: path, angle: -45)
+    // 1. Soft drop shadow
+    let shadow = NSShadow()
+    shadow.shadowColor = NSColor(calibratedWhite: 0.0, alpha: 0.32)
+    shadow.shadowOffset = NSSize(width: 0, height: -s * 0.025)
+    shadow.shadowBlurRadius = s * 0.045
+    shadow.set()
 
-    // Draw timer symbol in white
-    if let symbol = NSImage(systemSymbolName: "timer", accessibilityDescription: nil) {
-        let config = NSImage.SymbolConfiguration(pointSize: CGFloat(px) * 0.46, weight: .semibold)
+    let path = NSBezierPath(roundedRect: cardRect, xRadius: radius, yRadius: radius)
+    let bgGradient = NSGradient(colorsAndLocations:
+        (NSColor(calibratedRed: 0.12, green: 0.38, blue: 0.96, alpha: 1.0), 0.0),
+        (NSColor(calibratedRed: 0.34, green: 0.22, blue: 0.90, alpha: 1.0), 0.55),
+        (NSColor(calibratedRed: 0.52, green: 0.18, blue: 0.82, alpha: 1.0), 1.0)
+    )!
+    bgGradient.draw(in: path, angle: -55)
+
+    // Clear shadow for inner elements
+    NSShadow().set()
+
+    // 2. Subtle inner glass highlight border
+    NSGraphicsContext.current?.saveGraphicsState()
+    path.addClip()
+    let borderPath = NSBezierPath(roundedRect: cardRect.insetBy(dx: s * 0.006, dy: s * 0.006), xRadius: radius, yRadius: radius)
+    borderPath.lineWidth = max(1.0, s * 0.012)
+    NSColor(calibratedWhite: 1.0, alpha: 0.24).setStroke()
+    borderPath.stroke()
+
+    // 3. Decorative countdown progress ring
+    let center = NSPoint(x: s * 0.5, y: s * 0.5)
+    let ringRadius = s * 0.29
+    let trackPath = NSBezierPath()
+    trackPath.appendArc(withCenter: center, radius: ringRadius, startAngle: 0, endAngle: 360)
+    trackPath.lineWidth = max(1.5, s * 0.042)
+    NSColor(calibratedWhite: 1.0, alpha: 0.14).setStroke()
+    trackPath.stroke()
+
+    let arcPath = NSBezierPath()
+    arcPath.appendArc(withCenter: center, radius: ringRadius, startAngle: 90, endAngle: -145, clockwise: true)
+    arcPath.lineWidth = max(1.5, s * 0.042)
+    arcPath.lineCapStyle = .round
+    NSColor(calibratedRed: 0.45, green: 0.92, blue: 1.0, alpha: 0.95).setStroke()
+    arcPath.stroke()
+
+    // 4. Center graduation cap symbol
+    if let capSymbol = NSImage(systemSymbolName: "graduationcap.fill", accessibilityDescription: nil) {
+        let config = NSImage.SymbolConfiguration(pointSize: s * 0.28, weight: .bold)
             .applying(NSImage.SymbolConfiguration(paletteColors: [.white]))
-        if let configured = symbol.withSymbolConfiguration(config) {
+        if let configured = capSymbol.withSymbolConfiguration(config) {
             let symSize = configured.size
             let symRect = NSRect(
-                x: ( CGFloat(px) - symSize.width ) / 2.0,
-                y: ( CGFloat(px) - symSize.height ) / 2.0,
+                x: (s - symSize.width) / 2.0,
+                y: (s - symSize.height) / 2.0,
                 width: symSize.width,
                 height: symSize.height
             )
@@ -101,6 +137,15 @@ for (px, name) in sizes {
         }
     }
 
+    // 5. Small amber CCF/Paper badge dot at top-right of ring
+    let dotRadius = s * 0.042
+    let dotCenter = NSPoint(x: center.x, y: center.y + ringRadius)
+    let dotRect = NSRect(x: dotCenter.x - dotRadius, y: dotCenter.y - dotRadius, width: dotRadius * 2, height: dotRadius * 2)
+    let dotPath = NSBezierPath(ovalIn: dotRect)
+    NSColor(calibratedRed: 1.0, green: 0.82, blue: 0.28, alpha: 1.0).setFill()
+    dotPath.fill()
+
+    NSGraphicsContext.current?.restoreGraphicsState()
     NSGraphicsContext.restoreGraphicsState()
 
     if let pngData = rep.representation(using: .png, properties: [:]) {

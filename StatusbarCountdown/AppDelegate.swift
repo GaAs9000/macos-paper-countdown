@@ -8,6 +8,7 @@
 
 import Cocoa
 import Foundation
+import ServiceManagement
 
 protocol PreferencesWindowDelegate: AnyObject {
     func preferencesDidUpdate()
@@ -269,6 +270,19 @@ class AppDelegate: NSObject, NSApplicationDelegate, PreferencesWindowDelegate {
         }
         statusMenu.addItem(zeroPadMenuItem)
 
+        let launchAtLoginItem = NSMenuItem(
+            title: "Launch at Login",
+            action: #selector(toggleLaunchAtLogin(sender:)),
+            keyEquivalent: ""
+        )
+        launchAtLoginItem.target = self
+        launchAtLoginItem.state = (SMAppService.mainApp.status == .enabled) ? .on : .off
+        if let icon = NSImage(systemSymbolName: "power.circle", accessibilityDescription: nil) {
+            icon.isTemplate = true
+            launchAtLoginItem.image = icon
+        }
+        statusMenu.addItem(launchAtLoginItem)
+
         statusMenu.addItem(NSMenuItem.separator())
 
         // 4. Preferences & Cloud Sync
@@ -435,6 +449,20 @@ class AppDelegate: NSObject, NSApplicationDelegate, PreferencesWindowDelegate {
         sender.state = zeroPad ? .on : .off
         UserDefaults.standard.set(zeroPad, forKey: "zeroPad")
         tick()
+    }
+
+    @objc func toggleLaunchAtLogin(sender: NSMenuItem) {
+        do {
+            if SMAppService.mainApp.status == .enabled {
+                try SMAppService.mainApp.unregister()
+                sender.state = .off
+            } else {
+                try SMAppService.mainApp.register()
+                sender.state = .on
+            }
+        } catch {
+            NSSound.beep()
+        }
     }
 
     @IBAction func configurePreferences(_ sender: Any) {
