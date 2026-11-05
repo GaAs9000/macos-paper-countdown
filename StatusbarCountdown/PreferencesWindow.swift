@@ -244,6 +244,7 @@ struct PreferencesContentView: View {
                         .font(.system(size: 11.5))
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
+                        .fixedSize(horizontal: true, vertical: false)
                 }
 
                 Spacer()
@@ -454,13 +455,15 @@ struct PreferencesContentView: View {
                             Text("Quick Adjust:")
                                 .font(.system(size: 11))
                                 .foregroundStyle(.secondary)
-                            PresetButton(title: "+1 Hour") {
+                                .lineLimit(1)
+                                .fixedSize()
+                            PresetButton(title: "+1h") {
                                 viewModel.targetDate = max(Date(), viewModel.targetDate).addingTimeInterval(3600)
                             }
-                            PresetButton(title: "+1 Day") {
+                            PresetButton(title: "+1d") {
                                 viewModel.targetDate = max(Date(), viewModel.targetDate).addingTimeInterval(86400)
                             }
-                            PresetButton(title: "+1 Week") {
+                            PresetButton(title: "+7d") {
                                 viewModel.targetDate = max(Date(), viewModel.targetDate).addingTimeInterval(86400 * 7)
                             }
                             Spacer()
@@ -469,6 +472,8 @@ struct PreferencesContentView: View {
                             } label: {
                                 Label("Add to Calendar", systemImage: "calendar.badge.plus")
                                     .font(.system(size: 11, weight: .medium))
+                                    .lineLimit(1)
+                                    .fixedSize()
                             }
                             .buttonStyle(.bordered)
                             .controlSize(.small)
@@ -478,6 +483,8 @@ struct PreferencesContentView: View {
                             } label: {
                                 Label("Pin to Menu", systemImage: "pin.fill")
                                     .font(.system(size: 11, weight: .medium))
+                                    .lineLimit(1)
+                                    .fixedSize()
                             }
                             .buttonStyle(.bordered)
                             .controlSize(.small)
@@ -620,7 +627,7 @@ struct PreferencesContentView: View {
             .padding(.vertical, 12)
             .background(Color(nsColor: .windowBackgroundColor).opacity(0.4))
         }
-        .frame(width: 520, height: 540)
+        .frame(width: 540, height: 610)
         .background(VisualEffectBlur())
         .onReceive(previewTimer) { currentTime in
             self.now = currentTime
@@ -670,7 +677,7 @@ class PreferencesWindow: NSWindowController, NSWindowDelegate {
 
     convenience init() {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 520, height: 540),
+            contentRect: NSRect(x: 0, y: 0, width: 540, height: 610),
             styleMask: [.titled, .closable, .fullSizeContentView],
             backing: .buffered,
             defer: false

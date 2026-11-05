@@ -6,6 +6,10 @@ A native macOS menu bar countdown utility tailored for academic paper submission
 
 Based on [bbrks/osx-statusbar-countdown](https://github.com/bbrks/osx-statusbar-countdown) and enhanced with native [ccfddl](https://github.com/ccfddl/ccf-deadlines) / [CCFBar](https://github.com/superpung/CCFBar) cloud synchronization — **no Python, no SwiftBar, and no manual JSON/YAML configuration required**.
 
+<p align="center">
+  <img src="docs/preview.png" width="520" alt="Paper & CCF Deadline Countdown Preview" />
+</p>
+
 ---
 
 ## ✨ Key Features (v2.0)
