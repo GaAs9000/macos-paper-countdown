@@ -5,6 +5,7 @@
 //  Native CCF Deadlines (ccfddl) YAML Parser, Timezone Converter & Paper Stage Presets.
 //
 
+import Cocoa
 import Foundation
 
 public enum PaperStage: String, CaseIterable, Identifiable {
@@ -98,6 +99,121 @@ public struct TrackedCountdownItem: Codable, Identifiable, Equatable {
     public var rawDeadlineString: String?
     public var link: String?
     public var ccfRank: String?
+}
+
+public enum CalendarExportResult {
+    case savedDirectly(String)
+    case openedICS(String)
+    case failed(String)
+}
+
+public enum CalendarService {
+    /// Export a countdown deadline to Apple Calendar (or default `.ics` handler) with automatic 7-day, 1-day, and 1-hour advance alarms.
+    public static func exportDeadlineToCalendar(
+        title: String,
+        deadlineDate: Date,
+        timezoneNote: String?,
+        conferenceLink: String?,
+        ccfRank: String?,
+        completion: @escaping (CalendarExportResult) -> Void
+    ) {
+        // Always generate a rich standard .ics with VALARM reminders and open in Calendar.app
+        // Using standard .ics guarantees zero TCC entitlement friction on ad-hoc signed builds AND works with Apple Calendar, Outlook, or Fantastical.
+        do {
+            let icsURL = try generateICSFile(
+                title: title,
+                deadlineDate: deadlineDate,
+                timezoneNote: timezoneNote,
+                conferenceLink: conferenceLink,
+                ccfRank: ccfRank
+            )
+            NSWorkspace.shared.open(icsURL)
+            completion(.openedICS("Opened '\(title)' in Calendar (with 7d / 1d / 1h reminders)"))
+        } catch {
+            completion(.failed("Failed to export calendar event: \(error.localizedDescription)"))
+        }
+    }
+
+    public static func generateICSFile(
+        title: String,
+        deadlineDate: Date,
+        timezoneNote: String?,
+        conferenceLink: String?,
+        ccfRank: String?
+    ) throws -> URL {
+        let utcFormatter = DateFormatter()
+        utcFormatter.locale = Locale(identifier: "en_US_POSIX")
+        utcFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+        utcFormatter.dateFormat = "yyyyMMdd'T'HHmmss'Z'"
+
+        // Set event start 1 hour before deadline and end right at the exact deadline
+        let startDate = deadlineDate.addingTimeInterval(-3600)
+        let dtStamp = utcFormatter.string(from: Date())
+        let dtStart = utcFormatter.string(from: startDate)
+        let dtEnd = utcFormatter.string(from: deadlineDate)
+        let uid = UUID().uuidString + "@statusbarcountdown.macos"
+
+        let rankBadge = (ccfRank != nil && !ccfRank!.isEmpty && ccfRank != "N") ? " [CCF-\(ccfRank!)]" : ""
+        let summary = escapeICS("⏰ \(title)\(rankBadge) Deadline")
+
+        var descLines: [String] = ["Paper & CCF Conference Deadline Reminder"]
+        if let tz = timezoneNote, !tz.isEmpty {
+            descLines.append("Conference Origin Timezone: \(tz)")
+        }
+        if let link = conferenceLink, !link.isEmpty {
+            descLines.append("Official Website: \(link)")
+        }
+        let description = escapeICS(descLines.joined(separator: "\\n"))
+        let urlLine = (conferenceLink != nil && !conferenceLink!.isEmpty) ? "\r\nURL:\(conferenceLink!)" : ""
+
+        let icsContent = """
+        BEGIN:VCALENDAR\r
+        VERSION:2.0\r
+        PRODID:-//StatusbarCountdown//Paper & CCF Deadline Countdown v2.1//EN\r
+        CALSCALE:GREGORIAN\r
+        METHOD:PUBLISH\r
+        BEGIN:VEVENT\r
+        UID:\(uid)\r
+        DTSTAMP:\(dtStamp)\r
+        DTSTART:\(dtStart)\r
+        DTEND:\(dtEnd)\r
+        SUMMARY:\(summary)\r
+        DESCRIPTION:\(description)\(urlLine)\r
+        STATUS:CONFIRMED\r
+        BEGIN:VALARM\r
+        TRIGGER:-P7D\r
+        ACTION:DISPLAY\r
+        DESCRIPTION:\(summary) is in 7 days!\r
+        END:VALARM\r
+        BEGIN:VALARM\r
+        TRIGGER:-P1D\r
+        ACTION:DISPLAY\r
+        DESCRIPTION:\(summary) is tomorrow (24 hours left)!\r
+        END:VALARM\r
+        BEGIN:VALARM\r
+        TRIGGER:-PT1H\r
+        ACTION:DISPLAY\r
+        DESCRIPTION:\(summary) is in 1 hour!\r
+        END:VALARM\r
+        END:VEVENT\r
+        END:VCALENDAR\r
+        """
+
+        let safeFileName = title
+            .replacingOccurrences(of: "/", with: "-")
+            .replacingOccurrences(of: ":", with: "-")
+            .replacingOccurrences(of: " ", with: "_")
+        let tempDir = FileManager.default.temporaryDirectory
+        let fileURL = tempDir.appendingPathComponent("\(safeFileName)_Deadline.ics")
+        try icsContent.write(to: fileURL, atomically: true, encoding: .utf8)
+        return fileURL
+    }
+
+    private static func escapeICS(_ text: String) -> String {
+        return text
+            .replacingOccurrences(of: ",", with: "\\,")
+            .replacingOccurrences(of: ";", with: "\\;")
+    }
 }
 
 public enum CCFDeadlineParser {

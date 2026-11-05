@@ -36,6 +36,7 @@ final class PreferencesViewModel: ObservableObject {
     @Published var selectedConferenceLink: String = ""
     @Published var selectedCCFRank: String = ""
     @Published var trackedItems: [TrackedCountdownItem] = []
+    @Published var calendarFeedbackMessage: String = ""
 
     func loadFromDefaults(defaultName: String, defaultDate: Date) {
         let defaults = UserDefaults.standard
@@ -157,6 +158,25 @@ final class PreferencesViewModel: ObservableObject {
     func removeTracked(_ item: TrackedCountdownItem) {
         trackedItems.removeAll { $0.id == item.id }
         saveTrackedItems()
+    }
+
+    func exportCurrentToCalendar() {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let exportTitle = trimmed.isEmpty ? "Paper Deadline" : trimmed
+        CalendarService.exportDeadlineToCalendar(
+            title: exportTitle,
+            deadlineDate: targetDate,
+            timezoneNote: selectedTimezoneNote,
+            conferenceLink: selectedConferenceLink,
+            ccfRank: selectedCCFRank
+        ) { [weak self] result in
+            switch result {
+            case .savedDirectly(let msg), .openedICS(let msg):
+                self?.calendarFeedbackMessage = "✅ " + msg
+            case .failed(let err):
+                self?.calendarFeedbackMessage = "⚠️ " + err
+            }
+        }
     }
 }
 
@@ -445,13 +465,29 @@ struct PreferencesContentView: View {
                             }
                             Spacer()
                             Button {
-                                viewModel.addCurrentToTracked()
+                                viewModel.exportCurrentToCalendar()
                             } label: {
-                                Label("Pin to Menu List", systemImage: "pin.fill")
+                                Label("Add to Calendar", systemImage: "calendar.badge.plus")
                                     .font(.system(size: 11, weight: .medium))
                             }
                             .buttonStyle(.bordered)
                             .controlSize(.small)
+
+                            Button {
+                                viewModel.addCurrentToTracked()
+                            } label: {
+                                Label("Pin to Menu", systemImage: "pin.fill")
+                                    .font(.system(size: 11, weight: .medium))
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
+                        }
+
+                        if !viewModel.calendarFeedbackMessage.isEmpty {
+                            Text(viewModel.calendarFeedbackMessage)
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(Color.accentColor)
+                                .lineLimit(1)
                         }
                     }
                     .padding(12)
@@ -489,6 +525,26 @@ struct PreferencesContentView: View {
                                     }
                                     .buttonStyle(.bordered)
                                     .controlSize(.mini)
+
+                                    Button {
+                                        CalendarService.exportDeadlineToCalendar(
+                                            title: item.name,
+                                            deadlineDate: item.targetDate,
+                                            timezoneNote: item.timezoneString,
+                                            conferenceLink: item.link,
+                                            ccfRank: item.ccfRank
+                                        ) { result in
+                                            if case .openedICS(let msg) = result {
+                                                viewModel.calendarFeedbackMessage = "✅ " + msg
+                                            }
+                                        }
+                                    } label: {
+                                        Image(systemName: "calendar.badge.plus")
+                                            .font(.system(size: 11))
+                                    }
+                                    .buttonStyle(.bordered)
+                                    .controlSize(.mini)
+                                    .help("Add this deadline to Calendar")
 
                                     Button {
                                         viewModel.removeTracked(item)

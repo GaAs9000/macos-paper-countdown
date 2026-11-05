@@ -64,6 +64,22 @@ struct TestRunner {
         assertEqual(iclr?.ccfRank, "A", "ICLR has CCF-A rank")
         assertEqual(iclr?.activeEdition()?.rounds.first?.rebuttalDeadline, "2026-11-25 23:59:59", "ICLR rebuttal deadline parsed")
 
-        print("🎉 All 15 unit assertions passed!")
+        // 6. Test Calendar .ics reminder file generation
+        if let icsURL = try? CalendarService.generateICSFile(
+            title: "ICLR '27 Rebuttal",
+            deadlineDate: Date().addingTimeInterval(86400 * 7),
+            timezoneNote: "2026-11-25 23:59:59 (AoE)",
+            conferenceLink: "https://iclr.cc/",
+            ccfRank: "A"
+        ), let icsText = try? String(contentsOf: icsURL, encoding: .utf8) {
+            assertTrue(icsText.contains("SUMMARY:⏰ ICLR '27 Rebuttal [CCF-A] Deadline"), "ICS contains formatted summary")
+            assertTrue(icsText.contains("TRIGGER:-P7D"), "ICS contains 7-day alarm")
+            assertTrue(icsText.contains("TRIGGER:-P1D"), "ICS contains 1-day alarm")
+            assertTrue(icsText.contains("TRIGGER:-PT1H"), "ICS contains 1-hour alarm")
+        } else {
+            assertTrue(false, "Failed to generate ICS file")
+        }
+
+        print("🎉 All 19 unit assertions passed!")
     }
 }

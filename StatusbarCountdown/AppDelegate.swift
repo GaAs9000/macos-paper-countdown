@@ -193,6 +193,18 @@ class AppDelegate: NSObject, NSApplicationDelegate, PreferencesWindowDelegate {
             statusMenu.addItem(webItem)
         }
 
+        let calReminderItem = NSMenuItem(
+            title: "Add Deadline to Calendar…",
+            action: #selector(addCurrentDeadlineToCalendar),
+            keyEquivalent: "e"
+        )
+        calReminderItem.target = self
+        if let calPlusIcon = NSImage(systemSymbolName: "calendar.badge.plus", accessibilityDescription: nil) {
+            calPlusIcon.isTemplate = true
+            calReminderItem.image = calPlusIcon
+        }
+        statusMenu.addItem(calReminderItem)
+
         // 2. Pinned Multi-Deadline Quick Switcher
         if !trackedItems.isEmpty {
             statusMenu.addItem(NSMenuItem.separator())
@@ -350,6 +362,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, PreferencesWindowDelegate {
     @objc func openConferenceWebsite() {
         guard !conferenceLink.isEmpty, let url = URL(string: conferenceLink) else { return }
         NSWorkspace.shared.open(url)
+    }
+
+    @objc func addCurrentDeadlineToCalendar() {
+        CalendarService.exportDeadlineToCalendar(
+            title: countdownName,
+            deadlineDate: countToDate,
+            timezoneNote: timezoneNote,
+            conferenceLink: conferenceLink,
+            ccfRank: ccfRank
+        ) { _ in }
     }
 
     @objc func syncCCFDeadlinesNow() {

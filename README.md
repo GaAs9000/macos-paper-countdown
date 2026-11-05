@@ -14,6 +14,7 @@ Based on [bbrks/osx-statusbar-countdown](https://github.com/bbrks/osx-statusbar-
 - 🔄 **One-Click Paper Submission Stages**: Instantly switch between **Abstract**, **Paper**, **Rebuttal**, **Decision**, and **Camera-Ready** countdowns.
 - 🌎 **Automatic AoE & Timezone Conversion**: Automatically converts conference deadlines (`AoE / UTC-12`, `UTC+0`, etc.) into your local timezone, while displaying both local and origin deadlines in the menu bar dropdown.
 - 📌 **Multi-Deadline Pinning & Quick Switch (`⌘1`–`⌘9`)**: Pin multiple upcoming paper deadlines to the dropdown menu and switch the active menu bar display with a single click.
+- 📅 **One-Click Calendar Import (`⌘E`)**: Export any conference or paper stage deadline directly to Apple Calendar (or Outlook/Fantastical) with automatic **7-day, 1-day, and 1-hour advance reminders** (`VALARM`), conference URL, and origin timezone notes.
 - 💎 **Modern macOS Vibrancy & Monospaced Typography**: Redesigned with native SwiftUI, `NSVisualEffectView` popover blur, SF Symbols icons, and jitter-free monospaced digits (`monospacedDigitSystemFont`).
 
 ## 🚀 Installation & Usage
@@ -49,7 +50,8 @@ open StatusbarCountdown.app
 2. 🔄 **投稿全阶段一键切换**：支持 **Abstract（摘要）**、**Paper（全文）**、**Rebuttal（反驳）**、**Decision（录用通知）**、**Camera-Ready（终稿）** 五大阶段一键切换与自定义微调。
 3. 🌎 **自动 AoE / 会议时区换算**：自动将顶会常用的 `AoE (UTC-12)` 或 `UTC+0` 精确换算为您当前的系统本地时间（如北京时间 `GMT+8`），并在菜单栏下拉列表中同时展示本地时间与会议原始时区时间。
 4. 📌 **多会议收藏与菜单栏秒切（`⌘1`–`⌘9`）**：同时投递多篇论文时，可将多个会议阶段固定（Pin）到下拉菜单列表，点击任意一项即可瞬间切换菜单栏主倒计时。
-5. 💎 **原生 macOS 毛玻璃与等宽数字排版**：采用 `NSVisualEffectView` 原生毛玻璃设置面板、SF Symbols 矢量图标与系统级等宽数字字体（每秒跳动绝不晃动菜单栏宽度）。
+5. 📅 **一键导入系统日历提醒（`⌘E`）**：支持在下拉菜单或设置窗口一键将截稿时间导入 macOS「日历」（Apple Calendar / Outlook / Fantastical），自动附带 **提前 7 天、提前 1 天、提前 1 小时** 三重提醒闹钟，以及会议官网和原始时区备注。
+6. 💎 **原生 macOS 毛玻璃与等宽数字排版**：采用 `NSVisualEffectView` 原生毛玻璃设置面板、SF Symbols 矢量图标与系统级等宽数字字体（每秒跳动绝不晃动菜单栏宽度）。
 
 ### 📦 安装与使用
 
