@@ -675,7 +675,7 @@ struct PreferencesContentView: View {
             .padding(.vertical, 12)
             .background(Color(nsColor: .windowBackgroundColor).opacity(0.4))
         }
-        .frame(width: 540, height: 610)
+        .frame(width: 540, height: 660)
         .background(VisualEffectBlur())
         .onReceive(previewTimer) { currentTime in
             self.now = currentTime
@@ -725,7 +725,7 @@ class PreferencesWindow: NSWindowController, NSWindowDelegate {
 
     convenience init() {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 540, height: 610),
+            contentRect: NSRect(x: 0, y: 0, width: 540, height: 660),
             styleMask: [.titled, .closable, .fullSizeContentView],
             backing: .buffered,
             defer: false
