@@ -203,18 +203,21 @@ struct PreferencesContentView: View {
                         .foregroundStyle(.white)
                 }
 
-                VStack(alignment: .leading, spacing: 2) {
-                    HStack(spacing: 6) {
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack(alignment: .center, spacing: 6) {
                         Text("Paper & CCF Deadline Countdown")
-                            .font(.system(size: 15.5, weight: .semibold, design: .rounded))
+                            .font(.system(size: 15, weight: .semibold, design: .rounded))
                             .foregroundStyle(.primary)
+                            .lineLimit(1)
+                            .fixedSize(horizontal: true, vertical: false)
 
                         Text("v2.0")
                             .font(.system(size: 10, weight: .bold, design: .monospaced))
-                            .padding(.horizontal, 5)
-                            .padding(.vertical, 1.5)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
                             .background(Capsule().fill(Color.accentColor.opacity(0.15)))
                             .foregroundStyle(Color.accentColor)
+                            .fixedSize()
                     }
 
                     Text(repository.lastSyncMessage)
@@ -340,9 +343,12 @@ struct PreferencesContentView: View {
                                                 .font(.system(size: 10.5))
                                             Text(stage.rawValue)
                                                 .font(.system(size: 11.5, weight: active ? .semibold : .regular))
+                                                .lineLimit(1)
+                                                .fixedSize(horizontal: true, vertical: false)
                                         }
                                         .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 5)
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 6)
                                         .background(
                                             RoundedRectangle(cornerRadius: 6, style: .continuous)
                                                 .fill(active ? Color.accentColor.opacity(0.18) : Color.primary.opacity(0.04))
@@ -558,7 +564,7 @@ struct PreferencesContentView: View {
             .padding(.vertical, 12)
             .background(Color(nsColor: .windowBackgroundColor).opacity(0.4))
         }
-        .frame(width: 480, height: 540)
+        .frame(width: 520, height: 540)
         .background(VisualEffectBlur())
         .onReceive(previewTimer) { currentTime in
             self.now = currentTime
@@ -608,7 +614,7 @@ class PreferencesWindow: NSWindowController, NSWindowDelegate {
 
     convenience init() {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 480, height: 540),
+            contentRect: NSRect(x: 0, y: 0, width: 520, height: 540),
             styleMask: [.titled, .closable, .fullSizeContentView],
             backing: .buffered,
             defer: false
