@@ -78,6 +78,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, PreferencesWindowDelegate {
     var showName = true
     var showSeconds = true
     var zeroPad = false
+    var mascotStyle: MascotStyle = .cloud
 
     let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     var statusMenu: NSMenu!
@@ -125,17 +126,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, PreferencesWindowDelegate {
         if defaults.object(forKey: "zeroPad") != nil {
             zeroPad = defaults.bool(forKey: "zeroPad")
         }
+        if let savedMascot = defaults.string(forKey: "mascotStyle"),
+           let style = MascotStyle(rawValue: savedMascot) {
+            mascotStyle = style
+        }
     }
 
     private func setupStatusBarButton() {
         guard let button = statusItem.button else { return }
-        if let icon = NSImage(systemSymbolName: "timer", accessibilityDescription: "Countdown Timer") {
-            let config = NSImage.SymbolConfiguration(pointSize: 13, weight: .medium)
-            let configuredIcon = icon.withSymbolConfiguration(config) ?? icon
-            configuredIcon.isTemplate = true
-            button.image = configuredIcon
-            button.imagePosition = .imageLeading
-        }
+        button.image = mascotStyle.makeStatusBarImage()
+        button.imagePosition = .imageLeading
         button.font = NSFont.monospacedDigitSystemFont(ofSize: NSFont.systemFontSize, weight: .medium)
     }
 
@@ -354,6 +354,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, PreferencesWindowDelegate {
         } else {
             trackedItems = []
         }
+
+        if let savedMascot = defaults.string(forKey: "mascotStyle"),
+           let style = MascotStyle(rawValue: savedMascot) {
+            mascotStyle = style
+        }
+        statusItem.button?.image = mascotStyle.makeStatusBarImage()
     }
 
     @objc func switchActiveTrackedItem(_ sender: NSMenuItem) {

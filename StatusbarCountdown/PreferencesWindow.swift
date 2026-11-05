@@ -38,6 +38,7 @@ final class PreferencesViewModel: ObservableObject {
     @Published var trackedItems: [TrackedCountdownItem] = []
     @Published var calendarFeedbackMessage: String = ""
     @Published var pendingDeleteItemId: UUID? = nil
+    @Published var mascotStyle: MascotStyle = .cloud
 
     func loadFromDefaults(defaultName: String, defaultDate: Date) {
         let defaults = UserDefaults.standard
@@ -52,6 +53,10 @@ final class PreferencesViewModel: ObservableObject {
         self.selectedTimezoneNote = defaults.string(forKey: "timezoneNote") ?? ""
         self.selectedConferenceLink = defaults.string(forKey: "conferenceLink") ?? ""
         self.selectedCCFRank = defaults.string(forKey: "ccfRank") ?? ""
+        if let savedMascot = defaults.string(forKey: "mascotStyle"),
+           let style = MascotStyle(rawValue: savedMascot) {
+            self.mascotStyle = style
+        }
         self.nameError = false
         self.dateError = false
         loadTrackedItems()
@@ -209,19 +214,14 @@ struct PreferencesContentView: View {
             HStack(spacing: 14) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(
-                            LinearGradient(
-                                colors: [Color.accentColor, Color.purple.opacity(0.85)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
+                        .fill(Color.primary.opacity(0.08))
                         .frame(width: 44, height: 44)
-                        .shadow(color: Color.accentColor.opacity(0.25), radius: 6, x: 0, y: 3)
 
-                    Image(systemName: "graduationcap.fill")
-                        .font(.system(size: 20, weight: .semibold))
-                        .foregroundStyle(.white)
+                    Image(nsImage: viewModel.mascotStyle.makeStatusBarImage())
+                        .resizable()
+                        .interpolation(.high)
+                        .frame(width: 28, height: 28)
+                        .foregroundStyle(.primary)
                 }
 
                 VStack(alignment: .leading, spacing: 3) {
@@ -583,29 +583,62 @@ struct PreferencesContentView: View {
                         }
                     }
 
-                    // 4. Live Menubar Preview Pill
-                    HStack(spacing: 8) {
-                        Image(systemName: "timer")
-                            .font(.system(size: 12.5, weight: .medium))
-                            .foregroundStyle(Color.accentColor)
+                    // 4. Cute Menubar Mascot Picker & Live Preview
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack(spacing: 6) {
+                            Text("Menubar Icon Mascot (菜单栏萌宠图标):")
+                                .font(.system(size: 11.5, weight: .semibold))
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            ForEach(MascotStyle.allCases) { style in
+                                let isChosen = viewModel.mascotStyle == style
+                                Button {
+                                    viewModel.mascotStyle = style
+                                    UserDefaults.standard.set(style.rawValue, forKey: "mascotStyle")
+                                } label: {
+                                    Image(nsImage: style.makeStatusBarImage())
+                                        .resizable()
+                                        .interpolation(.high)
+                                        .frame(width: 16, height: 16)
+                                        .padding(5)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                                .fill(isChosen ? Color.accentColor.opacity(0.22) : Color.primary.opacity(0.05))
+                                        )
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                                .strokeBorder(isChosen ? Color.accentColor : Color.clear, lineWidth: 1)
+                                        )
+                                }
+                                .buttonStyle(.plain)
+                                .help(style.rawValue)
+                            }
+                        }
 
-                        Text("Menubar Preview:")
-                            .font(.system(size: 11.5, weight: .medium))
-                            .foregroundStyle(.secondary)
+                        HStack(spacing: 8) {
+                            Image(nsImage: viewModel.mascotStyle.makeStatusBarImage())
+                                .resizable()
+                                .interpolation(.high)
+                                .frame(width: 16, height: 16)
 
-                        Text(livePreviewText)
-                            .font(.system(size: 12.5, weight: .semibold).monospacedDigit())
-                            .foregroundStyle(.primary)
-                            .lineLimit(1)
+                            Text("Menubar Preview:")
+                                .font(.system(size: 11.5, weight: .medium))
+                                .foregroundStyle(.secondary)
 
-                        Spacer()
+                            Text(livePreviewText)
+                                .font(.system(size: 12.5, weight: .semibold).monospacedDigit())
+                                .foregroundStyle(.primary)
+                                .lineLimit(1)
+
+                            Spacer()
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                .fill(Color.primary.opacity(0.05))
+                        )
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
-                            .fill(Color.primary.opacity(0.05))
-                    )
                 }
                 .padding(.horizontal, 20)
                 .padding(.vertical, 14)
@@ -740,6 +773,7 @@ class PreferencesWindow: NSWindowController, NSWindowDelegate {
         defaults.set(viewModel.selectedTimezoneNote, forKey: "timezoneNote")
         defaults.set(viewModel.selectedConferenceLink, forKey: "conferenceLink")
         defaults.set(viewModel.selectedCCFRank, forKey: "ccfRank")
+        defaults.set(viewModel.mascotStyle.rawValue, forKey: "mascotStyle")
 
         // Automatically pin the active countdown to the watchlist if not present
         viewModel.addCurrentToTracked()

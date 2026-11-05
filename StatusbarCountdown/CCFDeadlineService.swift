@@ -8,6 +8,125 @@
 import Cocoa
 import Foundation
 
+public enum MascotStyle: String, CaseIterable, Identifiable {
+    case blob = "Blob"
+    case cloud = "Cloud"
+    case spark = "Star"
+    case clover = "Clover"
+    case heart = "Heart"
+    case drop = "Drop"
+    case bean = "Bean"
+    case hexa = "Hexa"
+    case timer = "Classic Timer"
+
+    public var id: String { rawValue }
+
+    /// Render a 18x18 template NSImage of the cute black mascot with two angled capsule eyes (or classic timer).
+    public func makeStatusBarImage() -> NSImage {
+        if self == .timer {
+            if let icon = NSImage(systemSymbolName: "timer", accessibilityDescription: "Countdown") {
+                let config = NSImage.SymbolConfiguration(pointSize: 13, weight: .medium)
+                let configured = icon.withSymbolConfiguration(config) ?? icon
+                configured.isTemplate = true
+                return configured
+            }
+        }
+
+        let size = NSSize(width: 18, height: 18)
+        let img = NSImage(size: size, flipped: false) { rect in
+            guard let ctx = NSGraphicsContext.current?.cgContext else { return false }
+            ctx.saveGState()
+
+            // Slight playful tilt (-12 degrees) like the cute mascot sheet
+            ctx.translateBy(x: 9, y: 9)
+            ctx.rotate(by: -0.18)
+            ctx.translateBy(x: -9, y: -9)
+
+            let bodyPath = Self.mascotBodyPath(for: self)
+            NSColor.black.setFill()
+            bodyPath.fill()
+
+            // Punch out the two cute capsule eyes using .clear blend mode so it works as a macOS template image in both Light & Dark mode!
+            ctx.setBlendMode(.clear)
+            let leftEye = NSBezierPath(roundedRect: NSRect(x: 8.6, y: 8.6, width: 1.75, height: 3.8), xRadius: 0.88, yRadius: 0.88)
+            let rightEye = NSBezierPath(roundedRect: NSRect(x: 11.7, y: 8.6, width: 1.75, height: 3.8), xRadius: 0.88, yRadius: 0.88)
+            leftEye.fill()
+            rightEye.fill()
+
+            ctx.restoreGState()
+            return true
+        }
+        img.isTemplate = true
+        return img
+    }
+
+    private static func mascotBodyPath(for style: MascotStyle) -> NSBezierPath {
+        let path = NSBezierPath()
+        switch style {
+        case .blob, .timer:
+            return NSBezierPath(ovalIn: NSRect(x: 2.0, y: 2.0, width: 14.0, height: 14.0))
+
+        case .cloud:
+            path.appendOval(in: NSRect(x: 2.0, y: 3.2, width: 8.5, height: 8.5))
+            path.appendOval(in: NSRect(x: 5.5, y: 5.2, width: 9.0, height: 9.0))
+            path.appendOval(in: NSRect(x: 8.0, y: 2.8, width: 8.0, height: 8.0))
+            path.appendOval(in: NSRect(x: 4.5, y: 2.2, width: 8.5, height: 7.5))
+            return path
+
+        case .spark:
+            // 4-point chubby star
+            let cx: CGFloat = 9.0, cy: CGFloat = 9.0
+            let outer: CGFloat = 7.6, inner: CGFloat = 4.2
+            for i in 0..<8 {
+                let angle = CGFloat(i) * (.pi / 4.0)
+                let r = (i % 2 == 0) ? outer : inner
+                let pt = NSPoint(x: cx + r * cos(angle), y: cy + r * sin(angle))
+                if i == 0 { path.move(to: pt) } else { path.line(to: pt) }
+            }
+            path.close()
+            path.lineJoinStyle = .round
+            return path
+
+        case .clover:
+            path.appendOval(in: NSRect(x: 2.2, y: 5.2, width: 7.6, height: 7.6))
+            path.appendOval(in: NSRect(x: 8.2, y: 5.2, width: 7.6, height: 7.6))
+            path.appendOval(in: NSRect(x: 5.2, y: 8.2, width: 7.6, height: 7.6))
+            path.appendOval(in: NSRect(x: 5.2, y: 2.2, width: 7.6, height: 7.6))
+            return path
+
+        case .heart:
+            path.appendOval(in: NSRect(x: 2.0, y: 6.2, width: 8.2, height: 8.2))
+            path.appendOval(in: NSRect(x: 7.8, y: 6.2, width: 8.2, height: 8.2))
+            path.move(to: NSPoint(x: 2.4, y: 8.8))
+            path.line(to: NSPoint(x: 9.0, y: 2.0))
+            path.line(to: NSPoint(x: 15.6, y: 8.8))
+            path.close()
+            return path
+
+        case .drop:
+            path.appendOval(in: NSRect(x: 2.5, y: 2.0, width: 13.0, height: 11.5))
+            path.move(to: NSPoint(x: 3.2, y: 9.5))
+            path.line(to: NSPoint(x: 9.0, y: 16.5))
+            path.line(to: NSPoint(x: 14.8, y: 9.5))
+            path.close()
+            return path
+
+        case .bean:
+            return NSBezierPath(roundedRect: NSRect(x: 1.8, y: 3.6, width: 14.4, height: 10.8), xRadius: 5.4, yRadius: 5.4)
+
+        case .hexa:
+            let cx: CGFloat = 9.0, cy: CGFloat = 9.0, r: CGFloat = 7.2
+            for i in 0..<6 {
+                let angle = CGFloat(i) * (.pi / 3.0)
+                let pt = NSPoint(x: cx + r * cos(angle), y: cy + r * sin(angle))
+                if i == 0 { path.move(to: pt) } else { path.line(to: pt) }
+            }
+            path.close()
+            return path
+        }
+    }
+}
+
 public enum PaperStage: String, CaseIterable, Identifiable {
     case abstract = "Abstract"
     case submission = "Paper"
